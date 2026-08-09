@@ -32,6 +32,30 @@
             padding: 40px 20px;
             overflow: hidden;
             user-select: none;
+            transition: background-color 0.5s ease, box-shadow 0.5s ease;
+            position: relative;
+        }
+
+        /* Canvas Background for Graph Effect */
+        #graph-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Ambient Lighting when Flashlight is ON */
+        body.torch-active {
+            background-color: #0d1a16;
+            box-shadow: inset 0 0 100px rgba(16, 185, 129, 0.15);
+        }
+
+        header, .power-container, footer {
+            position: relative;
+            z-index: 10;
         }
 
         header {
@@ -42,6 +66,11 @@
             color: #fff;
             font-size: 1.8rem;
             letter-spacing: 1px;
+            transition: text-shadow 0.3s;
+        }
+
+        body.torch-active h1 {
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
 
         .badge {
@@ -53,6 +82,7 @@
             border-radius: 12px;
             margin-top: 6px;
             border: 1px solid var(--accent-glow);
+            transition: all 0.3s;
         }
 
         /* Power Button Controls */
@@ -74,34 +104,89 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s, color 0.3s, box-shadow 0.3s;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             outline: none;
             -webkit-tap-highlight-color: transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .power-btn:hover {
+            transform: scale(1.03);
+            border-color: #555;
+        }
+
+        .power-btn:active {
+            transform: scale(0.95);
         }
 
         .power-btn svg {
             width: 75px;
             height: 75px;
             fill: currentColor;
-            transition: fill 0.3s;
+            transition: fill 0.3s, filter 0.3s;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Ripple Effect Element */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.35);
+            transform: scale(0);
+            animation: ripple-animation 0.6s linear;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .power-btn.active .ripple {
+            background: rgba(16, 185, 129, 0.4);
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
         }
 
         /* Active State (Torch ON) */
         .power-btn.active {
             border-color: var(--on-color);
             color: var(--on-color);
-            box-shadow: 0 0 35px rgba(16, 185, 129, 0.5);
+            box-shadow: 0 0 45px rgba(16, 185, 129, 0.6);
+            animation: pulse-glow 2s infinite alternate;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.4); }
+            100% { box-shadow: 0 0 50px rgba(16, 185, 129, 0.7); }
         }
 
         .status-text {
             font-size: 1rem;
             font-weight: 600;
             color: #888;
+            letter-spacing: 1px;
+            transition: color 0.3s;
         }
 
         .status-text.active {
             color: var(--on-color);
+        }
+
+        /* Shake animation for errors */
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
         }
 
         /* Subscription Modal */
@@ -115,6 +200,13 @@
             align-items: center;
             z-index: 100;
             padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
         }
 
         .modal {
@@ -126,6 +218,12 @@
             max-width: 360px;
             text-align: center;
             box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .modal-overlay.show .modal {
+            transform: scale(1);
         }
 
         .modal h2 {
@@ -158,6 +256,11 @@
             font-size: 1rem;
             letter-spacing: 2px;
             outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-glow);
         }
 
         .btn-unlock {
@@ -169,6 +272,13 @@
             font-weight: bold;
             font-size: 1rem;
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.1s, background-color 0.3s;
+        }
+
+        .btn-unlock:active {
+            transform: scale(0.97);
         }
 
         .error-msg {
@@ -182,9 +292,26 @@
             color: #666;
             margin-top: 15px;
         }
+
+        /* Watermark Styling */
+        footer {
+            margin-top: auto;
+            padding-top: 20px;
+            font-size: 0.8rem;
+            color: #555;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        footer span {
+            color: var(--accent-glow);
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
+
+    <canvas id="graph-canvas"></canvas>
 
     <header>
         <h1>TorchPro Mobile</h1>
@@ -192,7 +319,7 @@
     </header>
 
     <div class="power-container">
-        <button class="power-btn" id="power-btn">
+        <button class="power-btn" id="power-btn" aria-label="Toggle Flashlight">
             <svg viewBox="0 0 24 24">
                 <path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/>
             </svg>
@@ -201,12 +328,12 @@
     </div>
 
     <div class="modal-overlay" id="modal-overlay">
-        <div class="modal">
+        <div class="modal" id="modal-card">
             <h2>🔒 Paywall Locked</h2>
             <p>Turning off the flashlight requires a <b>Pro Subscription</b>. Enter your code below.</p>
             
             <div class="form-group">
-                <input type="text" id="sub-code" placeholder="ENTER CODE" maxlength="10">
+                <input type="text" id="sub-code" placeholder="ENTER CODE" maxlength="10" autocomplete="off">
                 <button class="btn-unlock" id="btn-unlock">Unlock & Turn Off</button>
                 <div class="error-msg" id="error-msg">Invalid Code! Try again.</div>
             </div>
@@ -215,10 +342,15 @@
         </div>
     </div>
 
+    <footer>
+        Created by <span>7edhee</span>
+    </footer>
+
     <script>
         const powerBtn = document.getElementById('power-btn');
         const statusText = document.getElementById('status-text');
         const modalOverlay = document.getElementById('modal-overlay');
+        const modalCard = document.getElementById('modal-card');
         const subCodeInput = document.getElementById('sub-code');
         const btnUnlock = document.getElementById('btn-unlock');
         const errorMsg = document.getElementById('error-msg');
@@ -230,10 +362,166 @@
 
         const VALID_PASSCODE = "6767";
 
+        // ================= BACKGROUND GRAPH ANIMATION ================= //
+        const canvas = document.getElementById('graph-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width, height;
+        let particles = [];
+        const particleCount = 45;
+        const maxDistance = 120;
+        let mouse = { x: null, y: null };
+
+        function resizeCanvas() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                mouse.x = e.touches[0].clientX;
+                mouse.y = e.touches[0].clientY;
+            }
+        });
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 1.2;
+                this.vy = (Math.random() - 0.5) * 1.2;
+                this.radius = Math.random() * 2 + 1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = isLightOn ? '#10b981' : '#66fcf1';
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animateGraph() {
+            ctx.clearRect(0, 0, width, height);
+
+            const activeColor = isLightOn ? '16, 185, 129' : '102, 252, 241';
+
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                // Draw graph edge connections
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < maxDistance) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(${activeColor}, ${1 - dist / maxDistance})`;
+                        ctx.lineWidth = 0.6;
+                        ctx.stroke();
+                    }
+                }
+
+                // Connect nodes to mouse pointer
+                if (mouse.x && mouse.y) {
+                    const mdx = particles[i].x - mouse.x;
+                    const mdy = particles[i].y - mouse.y;
+                    const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
+
+                    if (mdist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.strokeStyle = `rgba(${activeColor}, ${0.8 - mdist / 150})`;
+                        ctx.lineWidth = 0.8;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(animateGraph);
+        }
+
+        animateGraph();
+
+        // ================= TOUCH RIPPLE EFFECTS ================= //
+        function createRipple(event, element) {
+            const circle = document.createElement('span');
+            const diameter = Math.max(element.clientWidth, element.clientHeight);
+            const radius = diameter / 2;
+
+            const rect = element.getBoundingClientRect();
+            
+            const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+            const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${(clientX || (rect.left + rect.width / 2)) - rect.left - radius}px`;
+            circle.style.top = `${(clientY || (rect.top + rect.height / 2)) - rect.top - radius}px`;
+            circle.classList.add('ripple');
+
+            const existingRipple = element.getElementsByClassName('ripple')[0];
+            if (existingRipple) {
+                existingRipple.remove();
+            }
+
+            element.appendChild(circle);
+
+            setTimeout(() => {
+                circle.remove();
+            }, 600);
+        }
+
+        // Sound Effects (Web Audio API)
+        function playTone(freq, type, duration) {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {}
+        }
+
+        function triggerHaptics(pattern = [50]) {
+            if ("vibrate" in navigator) {
+                navigator.vibrate(pattern);
+            }
+        }
+
         // Mobile Flashlight Control Function
         async function setFlashlightState(turnOn) {
             try {
-                // Initialize Mobile Camera Stream if not already acquired
                 if (!videoTrack) {
                     const stream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: "environment" }
@@ -241,22 +529,24 @@
                     videoTrack = stream.getVideoTracks()[0];
                 }
 
-                // Apply Torch constraint to hardware camera
                 await videoTrack.applyConstraints({
                     advanced: [{ torch: turnOn }]
                 });
 
                 isLightOn = turnOn;
 
-                // Update UI State
                 if (isLightOn) {
                     powerBtn.classList.add('active');
                     statusText.classList.add('active');
+                    document.body.classList.add('torch-active');
                     statusText.textContent = "FLASHLIGHT ON";
+                    playTone(600, 'sine', 0.15);
                 } else {
                     powerBtn.classList.remove('active');
                     statusText.classList.remove('active');
+                    document.body.classList.remove('torch-active');
                     statusText.textContent = "TAP TO TURN ON";
+                    playTone(300, 'sine', 0.15);
                 }
 
             } catch (err) {
@@ -264,40 +554,78 @@
             }
         }
 
-        // Power Button Event Listener
-        powerBtn.addEventListener('click', async () => {
+        // Modal Controls
+        function openModal() {
+            modalOverlay.classList.add('show');
+            subCodeInput.focus();
+            playTone(250, 'triangle', 0.2);
+            triggerHaptics([40, 60, 40]);
+        }
+
+        function closeModal() {
+            modalOverlay.classList.remove('show');
+        }
+
+        // Power Button Click Handler
+        powerBtn.addEventListener('click', async (e) => {
+            createRipple(e, powerBtn);
+            triggerHaptics(30);
+
             if (!isLightOn) {
-                // Turns ON immediately
                 await setFlashlightState(true);
             } else {
-                // Check if subscribed before allowing OFF
                 if (isSubscribed) {
                     await setFlashlightState(false);
                 } else {
-                    // Show Paywall Modal
-                    modalOverlay.style.display = 'flex';
+                    openModal();
                 }
             }
         });
 
         // Verification Event Listener
-        btnUnlock.addEventListener('click', async () => {
+        async function verifyCode(e) {
+            if (e && e.clientX) createRipple(e, btnUnlock);
+
             const code = subCodeInput.value.trim().toUpperCase();
 
             if (code === VALID_PASSCODE) {
                 isSubscribed = true;
                 errorMsg.style.display = 'none';
-                modalOverlay.style.display = 'none';
+                closeModal();
                 
-                // Update UI badge
+                playTone(523.25, 'sine', 0.1);
+                setTimeout(() => playTone(659.25, 'sine', 0.15), 100);
+                setTimeout(() => playTone(783.99, 'sine', 0.25), 200);
+
                 subStatus.textContent = "PRO SUBSCRIBED";
                 subStatus.style.borderColor = "#10b981";
                 subStatus.style.color = "#10b981";
                 
-                // Execute deferred Turn-OFF action
+                triggerHaptics([50, 50, 100]);
+
                 await setFlashlightState(false);
             } else {
                 errorMsg.style.display = 'block';
+                modalCard.classList.add('shake');
+                playTone(150, 'sawtooth', 0.25);
+                triggerHaptics([100, 50, 100]);
+
+                setTimeout(() => {
+                    modalCard.classList.remove('shake');
+                }, 400);
+            }
+        }
+
+        btnUnlock.addEventListener('click', verifyCode);
+
+        // Keyboard Shortcuts Interaction
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !modalOverlay.classList.contains('show')) {
+                e.preventDefault();
+                powerBtn.click();
+            } else if (e.code === 'Enter' && modalOverlay.classList.contains('show')) {
+                e.preventDefault();
+                verifyCode();
             }
         });
     </script>
