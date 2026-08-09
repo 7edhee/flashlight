@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TorchPro - Mobile Flashlight</title>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: #1f2833;
+            --accent-glow: #66fcf1;
+            --text-color: #c5c6c7;
+            --off-color: #ef4444;
+            --on-color: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 40px 20px;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        header {
+            text-align: center;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(102, 252, 241, 0.1);
+            color: var(--accent-glow);
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            margin-top: 6px;
+            border: 1px solid var(--accent-glow);
+        }
+
+        /* Power Button Controls */
+        .power-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .power-btn {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 4px solid #333;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .power-btn svg {
+            width: 75px;
+            height: 75px;
+            fill: currentColor;
+            transition: fill 0.3s;
+        }
+
+        /* Active State (Torch ON) */
+        .power-btn.active {
+            border-color: var(--on-color);
+            color: var(--on-color);
+            box-shadow: 0 0 35px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-text {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #888;
+        }
+
+        .status-text.active {
+            color: var(--on-color);
+        }
+
+        /* Subscription Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            width: 100%;
+            max-width: 360px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        .modal h2 {
+            color: #fff;
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .modal p {
+            font-size: 0.85rem;
+            color: #aaa;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            background: #0b0c10;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: #fff;
+            text-align: center;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            outline: none;
+        }
+
+        .btn-unlock {
+            background: var(--accent-glow);
+            color: #0b0c10;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .error-msg {
+            color: var(--off-color);
+            font-size: 0.75rem;
+            display: none;
+        }
+
+        .hint {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>TorchPro Mobile</h1>
+        <div class="badge" id="sub-status">FREE TIER</div>
+    </header>
+
+    <div class="power-container">
+        <button class="power-btn" id="power-btn">
+            <svg viewBox="0 0 24 24">
+                <path d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/>
+            </svg>
+        </button>
+        <div class="status-text" id="status-text">TAP TO TURN ON</div>
+    </div>
+
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal">
+            <h2>🔒 Paywall Locked</h2>
+            <p>Turning off the flashlight requires a <b>Pro Subscription</b>. Enter your code below.</p>
+            
+            <div class="form-group">
+                <input type="text" id="sub-code" placeholder="ENTER CODE" maxlength="10">
+                <button class="btn-unlock" id="btn-unlock">Unlock & Turn Off</button>
+                <div class="error-msg" id="error-msg">Invalid Code! Try again.</div>
+            </div>
+
+            <div class="hint">Passcode: <b>PASS2026</b></div>
+        </div>
+    </div>
+
+    <script>
+        const powerBtn = document.getElementById('power-btn');
+        const statusText = document.getElementById('status-text');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const subCodeInput = document.getElementById('sub-code');
+        const btnUnlock = document.getElementById('btn-unlock');
+        const errorMsg = document.getElementById('error-msg');
+        const subStatus = document.getElementById('sub-status');
+
+        let isLightOn = false;
+        let isSubscribed = false;
+        let videoTrack = null;
+
+        const VALID_PASSCODE = "PASS2026";
+
+        // Mobile Flashlight Control Function
+        async function setFlashlightState(turnOn) {
+            try {
+                // Initialize Mobile Camera Stream if not already acquired
+                if (!videoTrack) {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: "environment" }
+                    });
+                    videoTrack = stream.getVideoTracks()[0];
+                }
+
+                // Apply Torch constraint to hardware camera
+                await videoTrack.applyConstraints({
+                    advanced: [{ torch: turnOn }]
+                });
+
+                isLightOn = turnOn;
+
+                // Update UI State
+                if (isLightOn) {
+                    powerBtn.classList.add('active');
+                    statusText.classList.add('active');
+                    statusText.textContent = "FLASHLIGHT ON";
+                } else {
+                    powerBtn.classList.remove('active');
+                    statusText.classList.remove('active');
+                    statusText.textContent = "TAP TO TURN ON";
+                }
+
+            } catch (err) {
+                alert("Mobile Hardware Error: " + err.message + "\n\nNote: Browsers require pages to be hosted over HTTPS or running on local device to access the flash.");
+            }
+        }
+
+        // Power Button Event Listener
+        powerBtn.addEventListener('click', async () => {
+            if (!isLightOn) {
+                // Turns ON immediately
+                await setFlashlightState(true);
+            } else {
+                // Check if subscribed before allowing OFF
+                if (isSubscribed) {
+                    await setFlashlightState(false);
+                } else {
+                    // Show Paywall Modal
+                    modalOverlay.style.display = 'flex';
+                }
+            }
+        });
+
+        // Verification Event Listener
+        btnUnlock.addEventListener('click', async () => {
+            const code = subCodeInput.value.trim().toUpperCase();
+
+            if (code === VALID_PASSCODE) {
+                isSubscribed = true;
+                errorMsg.style.display = 'none';
+                modalOverlay.style.display = 'none';
+                
+                // Update UI badge
+                subStatus.textContent = "PRO SUBSCRIBED";
+                subStatus.style.borderColor = "#10b981";
+                subStatus.style.color = "#10b981";
+                
+                // Execute deferred Turn-OFF action
+                await setFlashlightState(false);
+            } else {
+                errorMsg.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
